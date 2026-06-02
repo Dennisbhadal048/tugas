@@ -152,13 +152,13 @@ try:
         df_filtered,
         lat=actual_lat,
         lon=actual_lon,
-        size=actual_ch,
         color=actual_ch,
         color_continuous_scale=px.colors.sequential.Jet,
         hover_data=hover_list,
         zoom=7,
         height=600
     )
+    fig_map.update_traces(marker=dict(size=6))
     fig_map.update_layout(mapbox_style="open-street-map", margin={"r":0, "t":0, "l":0, "b":0})
     st.plotly_chart(fig_map, use_container_width=True)
 
