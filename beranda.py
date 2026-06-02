@@ -139,117 +139,129 @@ try:
     with kpi3:
         st.metric(label="Curah Hujan Maksimum", value=f"{max_val_ch:.2f} mm", delta=f"Koordinat: {coord_max}")
 
-    st.markdown("---")
+    st.sidebar.markdown("### Pilih Grafik yang Ingin Ditampilkan")
+    show_map = st.sidebar.checkbox("Peta Distribusi Spasial", value=True)
+    show_box = st.sidebar.checkbox("Box Plot Curah Hujan", value=True)
+    show_pie = st.sidebar.checkbox("Pie Chart Proporsi Sifat Hujan", value=True)
+    show_hist = st.sidebar.checkbox("Histogram Curah Hujan", value=True)
+    show_corr = st.sidebar.checkbox("Korelasi CH vs Anomali CH", value=True)
+    show_west_east = st.sidebar.checkbox("Profil Barat-Timur", value=True)
+    show_north_south = st.sidebar.checkbox("Profil Utara-Selatan", value=True)
 
-    st.subheader("🗺️ Peta Distribusi Spasial Grid GSMaP")
-    hover_list = [actual_ch]
-    if actual_sh_pct:
-        hover_list += [actual_sh_pct, 'sifat_hujan_kategori']
-    if actual_anom:
-        hover_list.append(actual_anom)
-
-    fig_map = px.scatter_mapbox(
-        df_filtered,
-        lat=actual_lat,
-        lon=actual_lon,
-        color=actual_ch,
-        color_continuous_scale=px.colors.sequential.Jet,
-        hover_data=hover_list,
-        zoom=7,
-        height=600
-    )
-    fig_map.update_traces(marker=dict(size=6))
-    fig_map.update_layout(mapbox_style="open-street-map", margin={"r":0, "t":0, "l":0, "b":0})
-    st.plotly_chart(fig_map, use_container_width=True)
-
-    st.markdown("---")
-
-    chart_col1, chart_col2 = st.columns(2)
-    with chart_col1:
-        st.subheader("📊 Grafik Distribusi Nilai Curah Hujan (Box Plot)")
-        fig_box = px.box(
-            df_filtered,
-            y=actual_ch,
-            points="all",
-            labels={actual_ch: 'Curah Hujan (mm)'},
-            color_discrete_sequence=['#1f77b4']
-        )
-        st.plotly_chart(fig_box, use_container_width=True)
-
-    with chart_col2:
+    if show_map:
+        st.markdown("---")
+        st.subheader("🗺️ Peta Distribusi Spasial Grid GSMaP")
+        hover_list = [actual_ch]
         if actual_sh_pct:
-            st.subheader("🍩 Proporsi Sifat Hujan BMKG")
-            proporsi = df_filtered['sifat_hujan_kategori'].value_counts().reset_index()
-            proporsi.columns = ['Kategori', 'Jumlah Grid']
-            color_map = {"Normal (N)": "#2ca02c", "Atas Normal (AN)": "#1f77b4", "Bawah Normal (BN)": "#d62728"}
-            fig_pie = px.pie(
-                proporsi,
-                values='Jumlah Grid',
-                names='Kategori',
-                hole=0.4,
-                color='Kategori',
-                color_discrete_map=color_map
-            )
-            st.plotly_chart(fig_pie, use_container_width=True)
-        else:
-            st.subheader("📊 Proporsi Data Grid")
-            st.info("Kolom SH% tidak tersedia, jadi proporsi kategori BMKG tidak dapat ditampilkan.")
-
-    st.markdown("---")
-
-    trend_col, corr_col = st.columns(2)
-    with trend_col:
-        st.subheader("📈 Histogram Frekuensi Curah Hujan")
-        fig_hist = px.histogram(
-            df_filtered,
-            x=actual_ch,
-            nbins=30,
-            marginal="rug",
-            labels={actual_ch: 'Curah Hujan (mm)'},
-            opacity=0.8,
-            color_discrete_sequence=['#636efa']
-        )
-        st.plotly_chart(fig_hist, use_container_width=True)
-
-    with corr_col:
+            hover_list += [actual_sh_pct, 'sifat_hujan_kategori']
         if actual_anom:
-            st.subheader("🔍 Korelasi CH vs Anomali CH")
-            fig_corr = px.scatter(
-                df_filtered,
-                x=actual_ch,
-                y=actual_anom,
-                color='sifat_hujan_kategori' if actual_sh_pct else None,
-                labels={actual_ch:'Curah Hujan (mm)', actual_anom:'Anomali Curah Hujan'},
-                color_discrete_sequence=px.colors.qualitative.Plotly
-            )
-            st.plotly_chart(fig_corr, use_container_width=True)
-        else:
-            st.info("Kolom 'anomch' tidak tersedia untuk menampilkan korelasi anomali.")
+            hover_list.append(actual_anom)
 
-    st.markdown("---")
-
-    profile_col1, profile_col2 = st.columns(2)
-    with profile_col1:
-        st.subheader("📍 Profil Barat-Timur")
-        fig_west_east = px.scatter(
+        fig_map = px.scatter_mapbox(
             df_filtered,
-            x=actual_lon,
-            y=actual_ch,
-            labels={actual_lon:'Longitude', actual_ch:'Curah Hujan (mm)'},
-            trendline='ols'
+            lat=actual_lat,
+            lon=actual_lon,
+            color=actual_ch,
+            color_continuous_scale=px.colors.sequential.Jet,
+            hover_data=hover_list,
+            zoom=7,
+            height=600
         )
-        st.plotly_chart(fig_west_east, use_container_width=True)
+        fig_map.update_traces(marker=dict(size=6))
+        fig_map.update_layout(mapbox_style="open-street-map", margin={"r":0, "t":0, "l":0, "b":0})
+        st.plotly_chart(fig_map, use_container_width=True)
 
-    with profile_col2:
-        st.subheader("📍 Profil Utara-Selatan")
-        fig_north_south = px.scatter(
-            df_filtered,
-            x=actual_lat,
-            y=actual_ch,
-            labels={actual_lat:'Latitude', actual_ch:'Curah Hujan (mm)'},
-            trendline='ols'
-        )
-        st.plotly_chart(fig_north_south, use_container_width=True)
+    if show_box or show_pie:
+        st.markdown("---")
+        chart_col1, chart_col2 = st.columns(2)
+        if show_box:
+            with chart_col1:
+                st.subheader("📊 Grafik Distribusi Nilai Curah Hujan (Box Plot)")
+                fig_box = px.box(
+                    df_filtered,
+                    y=actual_ch,
+                    points="all",
+                    labels={actual_ch: 'Curah Hujan (mm)'},
+                    color_discrete_sequence=['#1f77b4']
+                )
+                st.plotly_chart(fig_box, use_container_width=True)
+        if show_pie:
+            with chart_col2:
+                if actual_sh_pct:
+                    st.subheader("🍩 Proporsi Sifat Hujan BMKG")
+                    proporsi = df_filtered['sifat_hujan_kategori'].value_counts().reset_index()
+                    proporsi.columns = ['Kategori', 'Jumlah Grid']
+                    color_map = {"Normal (N)": "#2ca02c", "Atas Normal (AN)": "#1f77b4", "Bawah Normal (BN)": "#d62728"}
+                    fig_pie = px.pie(
+                        proporsi,
+                        values='Jumlah Grid',
+                        names='Kategori',
+                        hole=0.4,
+                        color='Kategori',
+                        color_discrete_map=color_map
+                    )
+                    st.plotly_chart(fig_pie, use_container_width=True)
+                else:
+                    st.subheader("📊 Proporsi Data Grid")
+                    st.info("Kolom SH% tidak tersedia, jadi proporsi kategori BMKG tidak dapat ditampilkan.")
+
+    if show_hist or show_corr:
+        st.markdown("---")
+        trend_col, corr_col = st.columns(2)
+        if show_hist:
+            with trend_col:
+                st.subheader("📈 Histogram Frekuensi Curah Hujan")
+                fig_hist = px.histogram(
+                    df_filtered,
+                    x=actual_ch,
+                    nbins=30,
+                    marginal="rug",
+                    labels={actual_ch: 'Curah Hujan (mm)'},
+                    opacity=0.8,
+                    color_discrete_sequence=['#636efa']
+                )
+                st.plotly_chart(fig_hist, use_container_width=True)
+        if show_corr:
+            with corr_col:
+                if actual_anom:
+                    st.subheader("🔍 Korelasi CH vs Anomali CH")
+                    fig_corr = px.scatter(
+                        df_filtered,
+                        x=actual_ch,
+                        y=actual_anom,
+                        color='sifat_hujan_kategori' if actual_sh_pct else None,
+                        labels={actual_ch:'Curah Hujan (mm)', actual_anom:'Anomali Curah Hujan'},
+                        color_discrete_sequence=px.colors.qualitative.Plotly
+                    )
+                    st.plotly_chart(fig_corr, use_container_width=True)
+                else:
+                    st.info("Kolom 'anomch' tidak tersedia untuk menampilkan korelasi anomali.")
+
+    if show_west_east or show_north_south:
+        st.markdown("---")
+        profile_col1, profile_col2 = st.columns(2)
+        if show_west_east:
+            with profile_col1:
+                st.subheader("📍 Profil Barat-Timur")
+                fig_west_east = px.scatter(
+                    df_filtered,
+                    x=actual_lon,
+                    y=actual_ch,
+                    labels={actual_lon:'Longitude', actual_ch:'Curah Hujan (mm)'},
+                    trendline='ols'
+                )
+                st.plotly_chart(fig_west_east, use_container_width=True)
+        if show_north_south:
+            with profile_col2:
+                st.subheader("📍 Profil Utara-Selatan")
+                fig_north_south = px.scatter(
+                    df_filtered,
+                    x=actual_lat,
+                    y=actual_ch,
+                    labels={actual_lat:'Latitude', actual_ch:'Curah Hujan (mm)'},
+                    trendline='ols'
+                )
+                st.plotly_chart(fig_north_south, use_container_width=True)
 
     st.markdown("---")
 
